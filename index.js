@@ -1,9 +1,11 @@
 let inquirer = require('inquirer');
- let Word = require('./Word');
- let words = ["elephant", "giraffe", "Michael Bolton", "Carmen Electra", "Stockholm", "jeopardy", 
-              "fish bowl", "ludacris", "triskaidekaphobia", "jellybean", "cucumber", "Happy Birthday"]
- let guessesRemaining = 10;
- let randomWord = "";
+let chalk = require('chalk');
+let Word = require('./Word');
+let words = ["elephant", "giraffe", "Michael Bolton", "Carmen Electra", "Stockholm", "jeopardy", 
+            "fish bowl", "ludacris", "triskaidekaphobia", "jellybean", "cucumber", "Happy Birthday"]
+let guessesRemaining = 10;
+let randomWord = "";
+let unmaskedWord = "";
 
 let questions = [
     {
@@ -18,18 +20,15 @@ let questions = [
  * If you guess all the letters in the word, you win.
  */
 function startWordGuess(){
-    if(!randomWord || isGameOver(randomWord.getWord())){
-        console.log(`\n Game over! You Lose! \n`)
+    if(!randomWord){
         randomWord = determineRandomWord();
         guessesRemaining = 10;
         console.log(`\n${randomWord.getWord()} \n\n`);
     }
     inquirer.prompt(questions).then(answers => {
-        let wordBeforeGuess = randomWord.getWord();
         randomWord.guess(answers.userInput);
-        let wordAfterGuess = randomWord.getWord();
-        console.log(`\n ${wordAfterGuess} \n`);
-        displayResults(wordBeforeGuess, wordAfterGuess);
+        console.log(`\n ${randomWord.getWord()} \n`);
+        displayResults(answers.userInput);
         startWordGuess();
     });
 }
@@ -40,26 +39,24 @@ function startWordGuess(){
  * @param {*} wordBeforeGuess 
  * @param {*} wordAfterGuess 
  */
-function displayResults(wordBeforeGuess, wordAfterGuess){
-    if(isWordGuessed(wordAfterGuess)){
+function displayResults(userGuess){
+    if(randomWord.isWordGuessed()){
         console.log(`You got it right! Next word! \n`)
+        randomWord = "";
     }
-    else if(wordBeforeGuess === wordAfterGuess){
-        console.log(`Incorrect!!! ${--guessesRemaining} guesses remaining \n`);
+    else if (randomWord.isLetterGuessed(userGuess)){
+        console.log(chalk.green(`Correct! \n`));
     }
-    else {
-        console.log(`Correct! \n`);
+    else{
+        guessesRemaining--;
+        if(guessesRemaining === 0){
+            console.log(`\n You lose! No guesses left! The word was ${unmaskedWord}\n`);
+            randomWord = "";
+        }
+        else{
+            console.log(chalk.red(`Incorrect!!! ${guessesRemaining} guesses remaining \n`));
+        }
     }
-}
-
-/**
- * Game is over if you guess all the letters in the word, or if
- * you run out of guesses
- * 
- * @param {*} word 
- */
-function isGameOver(word){
-    return(guessesRemaining === 0 || isWordGuessed(word));
 }
 
 /**
@@ -79,7 +76,8 @@ function isWordGuessed(word){
  * Randomly picks a word from the word bank
  */
 function determineRandomWord(){
-    return new Word(words[Math.floor(Math.random() * words.length)]);
+    unmaskedWord = words[Math.floor(Math.random() * words.length)]
+    return new Word(unmaskedWord);
 }
 
 startWordGuess();

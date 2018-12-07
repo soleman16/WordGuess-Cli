@@ -17,6 +17,20 @@ let Letter = require('./Letter');
             currentLetter.guess(char);
         }
     }
+    this.isWordGuessed = function(){
+        return this.letters.every(function(letter){
+            return letter.hasBeenGuessed;
+        })
+    },
+    this.isLetterGuessed = function(char){
+        let letterGuessed = false;
+        this.letters.forEach(function(letter){
+            if(letter.char === char){
+                letterGuessed = true;
+            }
+        })
+        return letterGuessed;
+    }
  }
 
  function populateLetters(word){
